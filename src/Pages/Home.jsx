@@ -7,12 +7,12 @@ import 'aos/dist/aos.css'
 // Memoized Components
 
 const MainTitle = memo(() => (
-  <div className="space-y-2" data-aos="fade-up" data-aos-delay="600">
-    <h1 className="text-5xl sm:text-6xl md:text-6xl lg:text-6xl xl:text-7xl font-bold tracking-tight">
+  <div className="space-y-2 " data-aos="fade-up" data-aos-delay="600">
+    <h1 className="text-4xl sm:text-6xl md:text-6xl lg:text-6xl xl:text-7xl font-bold tracking-tight">
       <span className="relative inline-block">
         <span className="absolute -inset-2 bg-gradient-to-r from-[#6366f1] to-[#a855f7] blur-2xl opacity-20"></span>
         <span className="relative bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
-          Frontend
+        Full Stack Web
         </span>
       </span>
       <br />
@@ -64,12 +64,12 @@ const SocialLink = memo(({ icon: Icon, link }) => (
 const TYPING_SPEED = 100;
 const ERASING_SPEED = 50;
 const PAUSE_DURATION = 2000;
-const WORDS = ["Network & Telecom Student", "Tech Enthusiast"];
-const TECH_STACK = ["React", "Javascript", "Node.js", "Tailwind"];
+const WORDS = ["Systems Engineer", "Frontend Specialist", "Backend developer"];
+const TECH_STACK = ["React", "Javascript", "Node.js", "Tailwind", "Supabase"];
 const SOCIAL_LINKS = [
-  { icon: Github, link: "https://github.com/EkiZR" },
-  { icon: Linkedin, link: "https://www.linkedin.com/in/ekizr/" },
-  { icon: Instagram, link: "https://www.instagram.com/ekizr_/?hl=id" }
+  { icon: Github, link: "https://github.com/aledaniel04" },
+  { icon: Linkedin, link: "https://www.linkedin.com/in/alessandro-hidalgo/" },
+  { icon: Instagram, link: "https://www.instagram.com/alessandrodh/" }
 ];
 
 const Home = () => {
@@ -130,10 +130,13 @@ const Home = () => {
 
   // Lottie configuration
   const lottieOptions = {
-    src: "https://lottie.host/58753882-bb6a-49f5-a2c0-950eda1e135a/NLbpVqGegK.lottie",
+    src:"/lotties/animation.json",
     loop: true,
     autoplay: true,
-    style: { width: "100%", height: "100%" },
+    rendererSettings: {
+      preserveAspectRatio: 'xMidYMid slice',
+      progressiveLoad: true,
+    },
     className: `w-full h-full transition-all duration-500 ${
       isHovering 
         ? "scale-[180%] sm:scale-[160%] md:scale-[150%] lg:scale-[145%] rotate-2" 
@@ -142,10 +145,10 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden" id="Home">
+    <div className="min-h-screen bg-black overflow-hidden lg:mt-10" id="Home">
       <div className={`relative z-10 transition-all duration-1000 ${isLoaded ? "opacity-100" : "opacity-0"}`}>
-        <div className="container mx-auto px-[5%] sm:px-6 lg:px-[0%] min-h-screen">
-          <div className="flex flex-col lg:flex-row items-center justify-center h-screen md:justify-between gap-0 sm:gap-12 lg:gap-20">
+        <div className="container mx-auto px-[5%] sm:px-6 lg:px-0 min-h-screen">
+          <div className="flex flex-col lg:flex-row items-center justify-center h-screen md:justify-between gap-0 sm:gap-12 lg:gap-8">
             {/* Left Column */}
             <div className="w-full lg:w-1/2 space-y-6 sm:space-y-8 text-left lg:text-left order-1 lg:order-1 lg:mt-0"
               data-aos="fade-right"
@@ -165,11 +168,11 @@ const Home = () => {
                 <p className="text-base md:text-lg text-gray-400 max-w-xl leading-relaxed font-light"
                   data-aos="fade-up"
                   data-aos-delay="1000">
-                  Menciptakan Website Yang Inovatif, Fungsional, dan User-Friendly untuk Solusi Digital.
+                  Building Dynamic, Efficient, and Intuitive Web Applications to Deliver Digital Excellence.
                 </p>
 
                 {/* Tech Stack */}
-                <div className="flex flex-wrap gap-3 justify-start" data-aos="fade-up" data-aos-delay="1200">
+                <div className="flex flex-wrap gap-3 justify-start cursor-default" data-aos="fade-up" data-aos-delay="1200">
                   {TECH_STACK.map((tech, index) => (
                     <TechStack key={index} tech={tech} />
                   ))}
@@ -191,7 +194,7 @@ const Home = () => {
             </div>
 
             {/* Right Column - Optimized Lottie Animation */}
-            <div className="w-full py-[10%] sm:py-0 lg:w-1/2 h-auto lg:h-[600px] xl:h-[750px] relative flex items-center justify-center order-2 lg:order-2 mt-8 lg:mt-0"
+            <div className="w-full py-[10%] sm:py-0 lg:w-8/12 h-auto lg:h-[600px] xl:h-[750px] relative flex items-center justify-center order-2 lg:order-2 mt-10 lg:mt-0 lg:ms-10"
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
               data-aos="fade-left"
