@@ -133,10 +133,6 @@ const Home = () => {
     src:"/lotties/animation.json",
     loop: true,
     autoplay: true,
-    rendererSettings: {
-      preserveAspectRatio: 'xMidYMid slice',
-      progressiveLoad: true,
-    },
     className: `w-full h-full transition-all duration-500 ${
       isHovering 
         ? "scale-[180%] sm:scale-[160%] md:scale-[150%] lg:scale-[145%] rotate-2" 
@@ -191,10 +187,10 @@ const Home = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </div> 
 
             {/* Right Column - Optimized Lottie Animation */}
-            <div className="w-full py-[10%] sm:py-0 lg:w-8/12 h-auto lg:h-[600px] xl:h-[750px] relative flex items-center justify-center order-2 lg:order-2 mt-10 lg:mt-0 lg:ms-10"
+            <div className="w-full py-[10%] sm:py-0 lg:w-8/12 h-auto lg:h-[600px] xl:h-[750px] relative flex items-center justify-center order-2 lg:order-2 mt-10 lg:mt-0 lg:ms-10 lg:py-0"
               onMouseEnter={() => setIsHovering(true)}
               onMouseLeave={() => setIsHovering(false)}
               data-aos="fade-left"
@@ -205,7 +201,7 @@ const Home = () => {
                 }`}>
                 </div>
 
-                <div className={`relative z-10 w-full opacity-90 transform transition-transform duration-500 ${
+                <div className={`relative z-10 w-full opacity-90 lg:pb-40 lg:w-full transform transition-transform duration-500 ${
                   isHovering ? "scale-105" : "scale-100"
                 }`}>
                   <DotLottieReact {...lottieOptions} />
