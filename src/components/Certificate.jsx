@@ -3,7 +3,7 @@ import { Modal, IconButton, Box, Fade, Backdrop, Zoom, Typography } from "@mui/m
 import CloseIcon from "@mui/icons-material/Close"
 import FullscreenIcon from "@mui/icons-material/Fullscreen"
 
-const Certificate = ({ ImgSertif }) => {
+const Certificate = ({ ImgSertif, Title }) => {
 	const [open, setOpen] = useState(false)
 
 	const handleOpen = () => {
@@ -69,6 +69,12 @@ const Certificate = ({ ImgSertif }) => {
 						}}
 						onClick={handleOpen}
 					/>
+					<div className="overflow-hidden p-2 bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-lg shadow-2xl transition-all duration-300 hover:shadow-purple-500/20">
+						<h3 className="text-xl font-semibold bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-transparent">
+							{Title}
+						</h3>
+					</div>
+
 				</Box>
 
 				{/* Hover Overlay */}

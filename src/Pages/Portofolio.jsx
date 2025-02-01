@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { db, collection } from "../firebase";
-import { getDocs } from "firebase/firestore";
 import PropTypes from "prop-types";
 import SwipeableViews from "react-swipeable-views";
 import { useTheme } from "@mui/material/styles";
@@ -15,6 +13,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import Certificate from "../components/Certificate";
 import { Code, Award, Boxes } from "lucide-react";
+import { getCertificates, getProjects } from "../services/functions";
 
 // Separate ShowMore/ShowLess button component
 const ToggleButton = ({ onClick, isShowingMore }) => (
@@ -112,7 +111,7 @@ const techStacks = [
   { icon: "firebase.svg", language: "Firebase" },
   { icon: "MUI.svg", language: "Material UI" },
   { icon: "vercel.svg", language: "Vercel" },
-  { icon: "SweetAlert.svg", language: "SweetAlert2" },
+  { icon: "nextjs.svg", language: "Next.js" },
 ];
 
 export default function FullWidthTabs() {
@@ -132,34 +131,37 @@ export default function FullWidthTabs() {
     });
   }, []);
 
-  const fetchData = useCallback(async () => {
-    try {
-      const projectCollection = collection(db, "projects");
-      const certificateCollection = collection(db, "certificates");
-
-      const [projectSnapshot, certificateSnapshot] = await Promise.all([
-        getDocs(projectCollection),
-        getDocs(certificateCollection),
-      ]);
-
-      const projectData = projectSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        TechStack: doc.data().TechStack || [],
-      }));
-
-      const certificateData = certificateSnapshot.docs.map((doc) => doc.data());
-
-      setProjects(projectData);
-      setCertificates(certificateData);
-
-      // Store in localStorage
-      localStorage.setItem("projects", JSON.stringify(projectData));
-      localStorage.setItem("certificates", JSON.stringify(certificateData));
-    } catch (error) {
-      console.error("Error fetching data:", error);
+ const fetchData = useCallback(async () => {
+  try {
+    // Obtención de datos de proyectos desde Supabase
+    const { data: projectData, error: projectError } = await getProjects();
+    if (projectError) {
+      throw projectError;
     }
-  }, []);
+    console.log("Projects data:", projectData);
+  
+    // Obtención de datos de certificados desde Supabase
+    const { data: certificateData, error: certificateError } = await getCertificates();
+    if (certificateError) {
+      throw certificateError;
+    }
+    console.log("Certificates data:", certificateData);
+  
+    const projectsFormatted = projectData.map((project) => ({
+      ...project,
+      TechStack: project.TechStack || [],
+    }));
+  
+    setProjects(projectsFormatted);
+    setCertificates(certificateData);
+  
+    localStorage.setItem("projects", JSON.stringify(projectsFormatted));
+    localStorage.setItem("certificates", JSON.stringify(certificateData));
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+}, []);
+
 
   useEffect(() => {
     fetchData();
@@ -178,9 +180,9 @@ export default function FullWidthTabs() {
   }, []);
 
   const displayedProjects = showAllProjects ? projects : projects.slice(0, initialItems);
-  console.log(displayedProjects)
+  // console.log(displayedProjects)
   const displayedCertificates = showAllCertificates ? certificates : certificates.slice(0, initialItems);
-
+  console.log(displayedCertificates)
   return (
     <div className="md:px-[10%]  px-[5%] w-full sm:mt-0 mt-[3rem] bg-black overflow-hidden" id="Portofolio">
       {/* Header section - unchanged */}
@@ -334,7 +336,7 @@ export default function FullWidthTabs() {
                     data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
                     data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
                   >
-                    <Certificate ImgSertif={certificate.Img} />
+                    <Certificate ImgSertif={certificate.Img} Title={certificate.Title} />
                   </div>
                 ))}
               </div>
