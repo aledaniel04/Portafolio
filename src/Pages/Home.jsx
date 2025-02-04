@@ -133,6 +133,10 @@ const Home = () => {
     src:"/lotties/animation.json",
     loop: true,
     autoplay: true,
+    renderConfig: {
+      preserveAspectRatio: 'xMidYMid slice',
+      progressiveLoad: true,
+    },
     className: `w-full h-full transition-all duration-500 ${
       isHovering 
         ? "scale-[180%] sm:scale-[160%] md:scale-[150%] lg:scale-[145%] rotate-2" 
