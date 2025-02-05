@@ -6,6 +6,7 @@ import Komentar from "../components/Commentar";
 import Swal from "sweetalert2";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import toast, { Toaster } from 'react-hot-toast';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -33,53 +34,57 @@ const ContactPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    Swal.fire({
-      title: 'Sending Message...',
-      html: 'Please wait while we send your message',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
+    // Mostrar toast de carga en el centro
+    const loadingToast = toast.loading("Sending Message...", {
+      position: "center",
     });
 
     try {
-      // Get form data
       const form = e.target;
       const formData = new FormData(form);
 
-      // Submit form
-      await form.submit();
-
-      // Show success message
-      Swal.fire({
-        title: 'Success!',
-        text: 'Your message has been sent successfully!',
-        icon: 'success',
-        confirmButtonColor: '#6366f1',
-        timer: 2000,
-        timerProgressBar: true
+      // Enviar manualmente la información con fetch
+      const response = await fetch("https://formsubmit.co/alessandrodhg04@gmail.com", {
+        method: "POST",
+        body: formData,
       });
 
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        message: "",
-      });
+      if (response.ok) {
+        // Mostrar toast de éxito, reemplazando el de carga
+        toast.success("Your message has been sent successfully!", {
+          id: loadingToast,
+          position: "center",
+        });
+
+        // Resetear formulario
+        setFormData({
+          name: "",
+          email: "",
+          message: "",
+        });
+      } else {
+        throw new Error("Failed to send message");
+      }
     } catch (error) {
-      Swal.fire({
-        title: 'Error!',
-        text: 'Something went wrong. Please try again later.',
-        icon: 'error',
-        confirmButtonColor: '#6366f1'
+      toast.error("Something went wrong. Please try again later.", {
+        id: loadingToast,
+        position: "center",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+
   return (
     <>
+       <Toaster
+        containerStyle={{
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
+      />
       <div className="text-center lg:mt-[5%] mt-10 mb-2 sm:px-0 px-[5%]">
         <h2
           data-aos="fade-down"
@@ -130,9 +135,7 @@ const ContactPage = () => {
               <Share2 className="w-10 h-10 text-[#6366f1] opacity-50" />
             </div>
 
-            <form 
-              action="https://formsubmit.co/ekizulfarrachman@gmail.com"
-              method="POST"
+            <form
               onSubmit={handleSubmit}
               className="space-y-6"
             >
