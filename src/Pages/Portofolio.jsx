@@ -138,14 +138,13 @@ export default function FullWidthTabs() {
     if (projectError) {
       throw projectError;
     }
-    console.log("Projects data:", projectData);
+    
   
     // Obtención de datos de certificados desde Supabase
     const { data: certificateData, error: certificateError } = await getCertificates();
     if (certificateError) {
       throw certificateError;
     }
-    console.log("Certificates data:", certificateData);
   
     const projectsFormatted = projectData.map((project) => ({
       ...project,
@@ -182,7 +181,6 @@ export default function FullWidthTabs() {
   const displayedProjects = showAllProjects ? projects : projects.slice(0, initialItems);
   // console.log(displayedProjects)
   const displayedCertificates = showAllCertificates ? certificates : certificates.slice(0, initialItems);
-  console.log(displayedCertificates)
   return (
     <div className="md:px-[10%]  px-[5%] w-full sm:mt-0 mt-[3rem] bg-black overflow-hidden" id="Portofolio">
       {/* Header section - unchanged */}

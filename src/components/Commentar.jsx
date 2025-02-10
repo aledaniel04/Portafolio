@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { getDocs, addDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../firebase-comment';
 import { MessageCircle, UserCircle2, Loader2, AlertCircle, Send, ImagePlus, X } from 'lucide-react';
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { createComment, fetchComments, removeCommentsSubscription, subscribeToComments, uploadImage } from '../services/functions';
+import { supabase } from '../services/supabase';
 
 const Comment = memo(({ comment, formatDate, index }) => (
-    <div 
+    <div
         className="px-4 pt-4 pb-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group hover:shadow-lg hover:-translate-y-0.5"
-        
     >
         <div className="flex items-start gap-3 ">
             {comment.profileImage ? (
@@ -28,7 +26,7 @@ const Comment = memo(({ comment, formatDate, index }) => (
                 <div className="flex items-center justify-between gap-4 mb-2">
                     <h4 className="font-medium text-white truncate">{comment.userName}</h4>
                     <span className="text-xs text-gray-400 whitespace-nowrap">
-                        {formatDate(comment.createdAt)}
+                        {formatDate(comment.created_at)}
                     </span>
                 </div>
                 <p className="text-gray-300 text-sm break-words leading-relaxed relative bottom-2">{comment.content}</p>
@@ -67,9 +65,10 @@ const CommentForm = memo(({ onSubmit, isSubmitting, error }) => {
     const handleSubmit = useCallback((e) => {
         e.preventDefault();
         if (!newComment.trim() || !userName.trim()) return;
-        
+
         onSubmit({ newComment, userName, imageFile });
         setNewComment('');
+        setUserName('')
         setImagePreview(null);
         setImageFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -181,62 +180,10 @@ const CommentForm = memo(({ onSubmit, isSubmitting, error }) => {
     );
 });
 
-const Komentar = () => {
-    const [comments, setComments] = useState([]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
-
-    useEffect(() => {
-        // Initialize AOS
-        AOS.init({
-            once: false,
-            duration: 1000,
-        });
-    }, []);
-
-    useEffect(() => {
-        const commentsRef = collection(db, 'portfolio-comments');
-        const q = query(commentsRef, orderBy('createdAt', 'desc'));
-        
-        return onSnapshot(q, (querySnapshot) => {
-            const commentsData = querySnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }));
-            setComments(commentsData);
-        });
-    }, []);
-
-    const uploadImage = useCallback(async (imageFile) => {
-        if (!imageFile) return null;
-        const storageRef = ref(storage, `profile-images/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(storageRef, imageFile);
-        return getDownloadURL(storageRef);
-    }, []);
-
-    const handleCommentSubmit = useCallback(async ({ newComment, userName, imageFile }) => {
-        setError('');
-        setIsSubmitting(true);
-        
-        try {
-            const profileImageUrl = await uploadImage(imageFile);
-            await addDoc(collection(db, 'portfolio-comments'), {
-                content: newComment,
-                userName,
-                profileImage: profileImageUrl,
-                createdAt: serverTimestamp(),
-            });
-        } catch (error) {
-            setError('Failed to post comment. Please try again.');
-            console.error('Error adding comment: ', error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    }, [uploadImage]);
-
+const CommentsList = memo(({ comments }) => {
     const formatDate = useCallback((timestamp) => {
         if (!timestamp) return '';
-        const date = timestamp.toDate();
+        const date = new Date(timestamp);
         const now = new Date();
         const diffMinutes = Math.floor((now - date) / (1000 * 60));
         const diffHours = Math.floor(diffMinutes / 60);
@@ -255,64 +202,155 @@ const Komentar = () => {
     }, []);
 
     return (
-        <div className="w-full bg-gradient-to-b from-white/10 to-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl" data-aos="fade-up" data-aos-duration="1000">
-        <div className="p-6 border-b border-white/10" data-aos="fade-down" data-aos-duration="800">
-            <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-indigo-500/20">
-                    <MessageCircle className="w-6 h-6 text-indigo-400" />
+        <div className="space-y-4 h-[300px] overflow-y-auto custom-scrollbar">
+            {comments.length === 0 ? (
+                <div className="text-center py-8">
+                    <UserCircle2 className="w-12 h-12 text-indigo-400 mx-auto mb-3 opacity-50" />
+                    <p className="text-gray-400">No comments yet. Start the conversation!</p>
                 </div>
-                <h3 className="text-xl font-semibold text-white">
-                    Comments <span className="text-indigo-400">({comments.length})</span>
-                </h3>
-            </div>
-        </div>
-        <div className="p-6 space-y-6">
-            {error && (
-                <div className="flex items-center gap-2 p-4 text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl" data-aos="fade-in">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <p className="text-sm">{error}</p>
-                </div>
+            ) : (
+                comments.map(comment => (
+                    <Comment key={comment.id} comment={comment} formatDate={formatDate} />
+                ))
             )}
-            
-            <div >
-                <CommentForm onSubmit={handleCommentSubmit} isSubmitting={isSubmitting} error={error} />
+        </div>
+    );
+});
+
+const useCommentsSubscription = () => {
+    const [comments, setComments] = useState([]);
+
+    useEffect(() => {
+        const loadInitialComments = async () => {
+            const { data, error } = await fetchComments();
+            if (!error && data) setComments(data);
+        };
+
+        loadInitialComments();
+
+        const subscription = supabase
+            .channel('comments-realtime')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'comments',
+                },
+                (payload) => {
+                    setComments(prev => {
+                        if (prev.some(c => c.id === payload.new.id)) {
+                            return prev;
+                        }
+                        return [payload.new, ...prev];
+                    });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, []); // Eliminar dependencias innecesarias
+
+    return { comments, setComments };
+};
+
+const useAOSInit = () => {
+    useEffect(() => {
+        AOS.init({ once: false, duration: 1000 });
+    }, []);
+};
+
+const ErrorMessage = memo(({ message }) => (
+    <div className="flex items-center gap-2 p-4 text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl">
+        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <p className="text-sm">{message}</p>
+    </div>
+));
+
+const Komentar = () => {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
+    const { comments, setComments } = useCommentsSubscription();
+    useAOSInit();
+
+    const handleCommentSubmit = useCallback(async ({ newComment, userName, imageFile }) => {
+        setError('');
+        setIsSubmitting(true);
+
+        // Declarar tempId fuera del try para que esté disponible en catch
+        const tempId = Date.now().toString();
+
+        try {
+            // Actualización optimista
+            const optimisticComment = {
+                id: tempId,
+                content: newComment.trim(),
+                userName: userName.trim(), // Corregir nombre de campo
+                profileImage: imageFile, // Corregir nombre de campo
+                created_at: new Date().toISOString()
+            };
+
+            setComments(prev => [optimisticComment, ...prev]);
+
+            // Subir imagen
+            let profileImageUrl = null;
+            if (imageFile) {
+                const { data: imageUrl, error: uploadError } = await uploadImage(imageFile);
+                if (uploadError) throw new Error(uploadError);
+                profileImageUrl = imageUrl;
+            }
+
+            // Insertar comentario real
+            const { data: comment, error: createError } = await createComment({
+                content: newComment.trim(),
+                userName: userName.trim(),
+                profileImage: profileImageUrl,
+                created_at: new Date().toISOString()
+            });
+
+            if (createError || !comment) throw new Error(createError || 'Failed to create comment');
+
+            // Reemplazar el comentario optimista
+            setComments(prev => [
+                {
+                    ...comment,
+                    userName: comment.userName || userName.trim(),
+                    profileImage: comment.profileImage || profileImageUrl
+                },
+                ...prev.filter(c => c.id !== tempId)
+            ]);
+
+        } catch (error) {
+            // Revertir actualización optimista solo si tempId existe
+            setComments(prev => prev.filter(c => c.id !== tempId));
+            setError(error.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    }, [comments]); // Asegurar que setComments está en las dependencias
+
+    return (
+        <div className="w-full bg-gradient-to-b from-white/10 to-white/5 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl">
+            {/* Header */}
+            <div className="p-6 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                    <MessageCircle className="w-6 h-6 text-indigo-400" />
+                    <h3 className="text-xl font-semibold text-white">
+                        Comments <span className="text-indigo-400">({comments.length})</span>
+                    </h3>
+                </div>
             </div>
 
-            <div className="space-y-4 h-[300px] overflow-y-auto custom-scrollbar" data-aos="fade-up" data-aos-delay="200">
-                {comments.length === 0 ? (
-                    <div className="text-center py-8" data-aos="fade-in">
-                        <UserCircle2 className="w-12 h-12 text-indigo-400 mx-auto mb-3 opacity-50" />
-                        <p className="text-gray-400">No comments yet. Start the conversation!</p>
-                    </div>
-                ) : (
-                    comments.map((comment, index) => (
-                        <Comment 
-                            key={comment.id} 
-                            comment={comment} 
-                            formatDate={formatDate}
-                            index={index}
-                        />
-                    ))
-                )}
+            {/* Main Content */}
+            <div className="p-6 space-y-6">
+                {error && <ErrorMessage message={error} />}
+                <CommentForm onSubmit={handleCommentSubmit} isSubmitting={isSubmitting} />
+
+                <CommentsList comments={comments} />
             </div>
         </div>
-        <style>{`
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-                background: rgba(255, 255, 255, 0.05);
-                border-radius: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: rgba(99, 102, 241, 0.5);
-                border-radius: 6px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: rgba(99, 102, 241, 0.7);
-            }
-        `}</style>
-    </div>
     );
 };
 
