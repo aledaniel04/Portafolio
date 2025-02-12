@@ -25,8 +25,7 @@ export const getCertificates = async (userId) => {
   return { data };
 };
 
-// Subir imagen (para un solo archivo) al bucket de Supabase y retornar su URL pública
-// functions.js
+
 export const uploadImage = async (file) => {
   if (!file) return { data: null, error: 'No file provided' };
 
@@ -77,7 +76,6 @@ export const fetchComments = async () => {
 };
 
 export const subscribeToComments = (onNewComment) => {
-  // Crea un canal para escuchar los cambios en la tabla 'comments'
   const subscription = supabase
     .channel('comments-channel')
     .on(
@@ -88,7 +86,6 @@ export const subscribeToComments = (onNewComment) => {
         table: 'comments',
       },
       (payload) => {
-        // Llama al callback pasando el nuevo comentario
         onNewComment(payload.new);
       }
     )

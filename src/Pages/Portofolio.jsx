@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
-import SwipeableViews from "react-swipeable-views";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
 import { useTheme } from "@mui/material/styles";
 import AppBar from "@mui/material/AppBar";
 import Tabs from "@mui/material/Tabs";
@@ -109,7 +110,7 @@ const techStacks = [
   { icon: "nodejs.svg", language: "Node JS" },
   { icon: "bootstrap.svg", language: "Bootstrap" },
   { icon: "firebase.svg", language: "Firebase" },
-  { icon: "MUI.svg", language: "Material UI" },
+  { icon: "supabase.svg", language: "Supabase" },
   { icon: "vercel.svg", language: "Vercel" },
   { icon: "nextjs.svg", language: "Next.js" },
 ];
@@ -117,6 +118,7 @@ const techStacks = [
 export default function FullWidthTabs() {
   const theme = useTheme();
   const [value, setValue] = useState(0);
+  const swiperRef = useRef(null);
   const [projects, setProjects] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [showAllProjects, setShowAllProjects] = useState(false);
@@ -131,35 +133,35 @@ export default function FullWidthTabs() {
     });
   }, []);
 
- const fetchData = useCallback(async () => {
-  try {
-    // Obtención de datos de proyectos desde Supabase
-    const { data: projectData, error: projectError } = await getProjects();
-    if (projectError) {
-      throw projectError;
+  const fetchData = useCallback(async () => {
+    try {
+      // Obtención de datos de proyectos desde Supabase
+      const { data: projectData, error: projectError } = await getProjects();
+      if (projectError) {
+        throw projectError;
+      }
+
+
+      // Obtención de datos de certificados desde Supabase
+      const { data: certificateData, error: certificateError } = await getCertificates();
+      if (certificateError) {
+        throw certificateError;
+      }
+
+      const projectsFormatted = projectData.map((project) => ({
+        ...project,
+        TechStack: project.TechStack || [],
+      }));
+
+      setProjects(projectsFormatted);
+      setCertificates(certificateData);
+
+      localStorage.setItem("projects", JSON.stringify(projectsFormatted));
+      localStorage.setItem("certificates", JSON.stringify(certificateData));
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
-    
-  
-    // Obtención de datos de certificados desde Supabase
-    const { data: certificateData, error: certificateError } = await getCertificates();
-    if (certificateError) {
-      throw certificateError;
-    }
-  
-    const projectsFormatted = projectData.map((project) => ({
-      ...project,
-      TechStack: project.TechStack || [],
-    }));
-  
-    setProjects(projectsFormatted);
-    setCertificates(certificateData);
-  
-    localStorage.setItem("projects", JSON.stringify(projectsFormatted));
-    localStorage.setItem("certificates", JSON.stringify(certificateData));
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  }
-}, []);
+  }, []);
 
 
   useEffect(() => {
@@ -168,6 +170,9 @@ export default function FullWidthTabs() {
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
+    if (swiperRef.current) {
+      swiperRef.current.slideTo(newValue);
+    }
   };
 
   const toggleShowMore = useCallback((type) => {
@@ -197,8 +202,7 @@ export default function FullWidthTabs() {
           </span>
         </h2>
         <p className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base mt-2">
-          Explore my journey through projects, certifications, and technical expertise. 
-          Each section represents a milestone in my continuous learning path.
+          Discover my career path through projects, certifications, and technical skills. Each section represents milestones that not only demonstrate my experience, but also my commitment to constant learning focused on results.
         </p>
       </div>
 
@@ -290,81 +294,91 @@ export default function FullWidthTabs() {
           </Tabs>
         </AppBar>
 
-        <SwipeableViews
-          axis={theme.direction === "rtl" ? "x-reverse" : "x"}
-          index={value}
-          onChangeIndex={setValue}
+        <Swiper
+          onSwiper={(swiper) => (swiperRef.current = swiper)}
+          onSlideChange={(swiper) => setValue(swiper.activeIndex)}
+          initialSlide={value}
         >
-          <TabPanel value={value} index={0} dir={theme.direction}>
-            <div className="container mx-auto flex justify-center items-center overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
-                {displayedProjects.map((project, index) => (
-                  <div
-                    key={project.id || index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <CardProject
-                      Img={project.Img}
-                      Title={project.Title}
-                      Description={project.Description}
-                      Link={project.Link}
-                      id={project.id}
-                    />
-                  </div>
-                ))}
+          <SwiperSlide>
+            <TabPanel value={value} index={0} dir={theme.direction}>
+              {/* Contenido de Projects */}
+              <div className="container mx-auto flex justify-center items-center overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
+                  {displayedProjects.map((project, index) => (
+                    <div
+                      key={project.id || index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <CardProject
+                        Img={project.Img}
+                        Title={project.Title}
+                        Description={project.Description}
+                        Link={project.Link}
+                        id={project.id}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            {projects.length > initialItems && (
-              <div className="mt-6 w-full flex justify-start">
-                <ToggleButton
-                  onClick={() => toggleShowMore('projects')}
-                  isShowingMore={showAllProjects}
-                />
-              </div>
-            )}
-          </TabPanel>
+              {projects.length > initialItems && (
+                <div className="mt-6 w-full flex justify-start">
+                  <ToggleButton
+                    onClick={() => toggleShowMore("projects")}
+                    isShowingMore={showAllProjects}
+                  />
+                </div>
+              )}
+            </TabPanel>
+          </SwiperSlide>
 
-          <TabPanel value={value} index={1} dir={theme.direction}>
-            <div className="container mx-auto flex justify-center items-center overflow-hidden">
-              <div className="grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4">
-                {displayedCertificates.map((certificate, index) => (
-                  <div
-                    key={index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <Certificate ImgSertif={certificate.Img} Title={certificate.Title} />
-                  </div>
-                ))}
+          <SwiperSlide>
+            <TabPanel value={value} index={1} dir={theme.direction}>
+              {/* Contenido de Certificates */}
+              <div className="container mx-auto flex justify-center items-center overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-3 md:gap-5 gap-4">
+                  {displayedCertificates.map((certificate, index) => (
+                    <div
+                      key={index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <Certificate ImgSertif={certificate.Img} Title={certificate.Title} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            {certificates.length > initialItems && (
-              <div className="mt-6 w-full flex justify-start">
-                <ToggleButton
-                  onClick={() => toggleShowMore('certificates')}
-                  isShowingMore={showAllCertificates}
-                />
-              </div>
-            )}
-          </TabPanel>
+              {certificates.length > initialItems && (
+                <div className="mt-6 w-full flex justify-start">
+                  <ToggleButton
+                    onClick={() => toggleShowMore("certificates")}
+                    isShowingMore={showAllCertificates}
+                  />
+                </div>
+              )}
+            </TabPanel>
+          </SwiperSlide>
 
-          <TabPanel value={value} index={2} dir={theme.direction}>
-            <div className="container mx-auto flex justify-center items-center overflow-hidden pb-[5%]">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-8 gap-5">
-                {techStacks.map((stack, index) => (
-                  <div
-                    key={index}
-                    data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
-                    data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
-                  >
-                    <TechStackIcon TechStackIcon={stack.icon} Language={stack.language} />
-                  </div>
-                ))}
+          <SwiperSlide>
+            <TabPanel value={value} index={2} dir={theme.direction}>
+              {/* Contenido de Tech Stack */}
+              <div className="container mx-auto flex justify-center items-center overflow-hidden pb-[5%]">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-8 gap-5">
+                  {techStacks.map((stack, index) => (
+                    <div
+                      key={index}
+                      data-aos={index % 3 === 0 ? "fade-up-right" : index % 3 === 1 ? "fade-up" : "fade-up-left"}
+                      data-aos-duration={index % 3 === 0 ? "1000" : index % 3 === 1 ? "1200" : "1000"}
+                    >
+                      <TechStackIcon TechStackIcon={stack.icon} Language={stack.language} />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </TabPanel>
-        </SwipeableViews>
+            </TabPanel>
+          </SwiperSlide>
+        </Swiper>
+
       </Box>
     </div>
   );

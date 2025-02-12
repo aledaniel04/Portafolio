@@ -44,7 +44,7 @@ const ContactPage = () => {
       const formData = new FormData(form);
 
       // Enviar manualmente la información con fetch
-      const response = await fetch("https://formsubmit.co/alessandrodhg04@gmail.com", {
+      const response = await fetch("https://formsubmit.co/alessandro.dev04@gmail.com", {
         method: "POST",
         body: formData,
       });
@@ -109,7 +109,7 @@ const ContactPage = () => {
           data-aos-duration="1100"
           className="text-slate-400 max-w-2xl mx-auto text-sm md:text-base mt-2"
         >
-          Got a question? Send me a message, and I'll get back to you soon.
+          Do you have any questions? Write to me and I will respond as soon as possible.
         </p>
       </div>
 
