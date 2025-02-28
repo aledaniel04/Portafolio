@@ -178,7 +178,9 @@ const ProjectDetails = () => {
 
               <div className="flex flex-wrap gap-3 md:gap-4">
                 {/* Action buttons */}
-                <a
+                {
+                  project.Link 
+                  ? <a
                   href={project.Link}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -188,6 +190,9 @@ const ProjectDetails = () => {
                   <ExternalLink className="relative w-4 h-4 md:w-5 md:h-5 group-hover:rotate-12 transition-transform" />
                   <span className="relative font-medium">Live Demo</span>
                 </a>
+                : <></>
+                }
+                
 
                 <a
                   href={project.Github}
