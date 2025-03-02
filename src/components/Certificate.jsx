@@ -61,7 +61,7 @@ const Certificate = ({ ImgSertif, Title }) => {
 						alt="Certificate"
 						style={{
 							width: "100%",
-							height: "auto",
+							height: "400px",
 							display: "block",
 							objectFit: "cover",
 							filter: "contrast(1.10) brightness(0.9) saturate(1.1)",

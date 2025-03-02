@@ -1,10 +1,11 @@
 import { supabase } from "./supabase";
 
 
-export const getProjects = async (userId) => {
+export const getProjects = async () => {
   const { data, error } = await supabase
     .from('projects')
     .select()
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Error al obtener proyectos:', error);
@@ -13,10 +14,11 @@ export const getProjects = async (userId) => {
   return { data };
 };
 
-export const getCertificates = async (userId) => {
+export const getCertificates = async () => {
   const { data, error } = await supabase
     .from('certificates')
     .select()
+    .order('created_at', { ascending: true });
 
   if (error) {
     console.error('Error al obtener certificates:', error);
