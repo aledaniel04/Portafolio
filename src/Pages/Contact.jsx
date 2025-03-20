@@ -33,30 +33,31 @@ const ContactPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     // Mostrar toast de carga en el centro
     const loadingToast = toast.loading("Sending Message...", {
       position: "center",
     });
-
+  
     try {
       const form = e.target;
       const formData = new FormData(form);
-
-      // Enviar manualmente la información con fetch
-      const response = await fetch("https://formsubmit.co/alessandro.dev04@gmail.com", {
+  
+      // Enviar manualmente la información usando fetch con la URL de Formspree
+      const response = await fetch("https://formspree.io/f/mvgkzjjq", {
         method: "POST",
+        headers: {
+          "Accept": "application/json",
+        },
         body: formData,
       });
-
+  
       if (response.ok) {
-        // Mostrar toast de éxito, reemplazando el de carga
         toast.success("Your message has been sent successfully!", {
           id: loadingToast,
           position: "center",
         });
-
-        // Resetear formulario
+        // Resetear el formulario
         setFormData({
           name: "",
           email: "",
@@ -74,6 +75,7 @@ const ContactPage = () => {
       setIsSubmitting(false);
     }
   };
+  
 
 
   return (
@@ -139,9 +141,6 @@ const ContactPage = () => {
               onSubmit={handleSubmit}
               className="space-y-6"
             >
-              {/* FormSubmit Configuration */}
-              <input type="hidden" name="_template" value="table" />
-              <input type="hidden" name="_captcha" value="false" />
 
               <div
                 data-aos="fade-up"
